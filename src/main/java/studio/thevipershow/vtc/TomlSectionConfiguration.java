@@ -4,8 +4,10 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Objects;
 import lombok.Getter;
+import lombok.var;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * This is an implementation of AbstractTomlConfiguration that allows you to read, store, and modify parsed values.
@@ -15,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
  * @param <T> Your plugin type.
  * @param <S> The enum type with all of your config sections.
  */
-public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends Enum<S> & ConfigurationEntryAndType> extends AbstractTomlConfiguration<T> implements ValuesLoader<S> {
+public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends Enum<S> & SectionType> extends AbstractTomlConfiguration<T> implements ValuesLoader<S> {
 
     protected final Class<S> enumTypeClass;
     protected final EnumSet<S> enumClassValues;
@@ -63,13 +65,14 @@ public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends E
 
     /**
      * Get the value from the configuration using one of its enum values.
+     * This method perform additional check before casting. It is exceptions safe.
      *
-     * @param value  The enum that represents the config field.
+     * @param value       The enum that represents the config field.
      * @param returnClass The type of data that should be returned by this config
-     *                   (note that you should never use primitive classes!)
-     * @param <Q>        The type of return.
-     * @throws IllegalArgumentException If the cast is unsuccessful.
+     *                    (note that you should never use primitive classes!)
+     * @param <Q>         The type of return.
      * @return The value obtained from the config cast to the return type
+     * @throws IllegalArgumentException If the cast is unsuccessful.
      */
     @Override
     public <Q> Q getConfigValue(@NotNull S value, @NotNull Class<? extends Q> returnClass) {
@@ -80,6 +83,25 @@ public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends E
             else
                 throw new IllegalArgumentException(String.format("The return type for %s inside config %s was %s but it has been tried to be cast to %s.",
                         value.getStringData(), getClass().getSimpleName(), obtained.getClass().getSimpleName(), returnClass.getSimpleName()));
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * Get the value from the configuration using one of its enum values.
+     *
+     * @param value The enum that represents the config field.
+     * @param <Q>   The type of return (will throw UnsupportedCastException if invalid).
+     * @return The value obtained from the config cast to the return type.
+     */
+    @Override
+    @Nullable
+    public <Q> Q getConfigValue(@NotNull S value) {
+        if (configurationValues.containsKey(value)) {
+            var obtained = configurationValues.get(value);
+            return Objects.requireNonNull((Q) obtained);
         } else {
             return null;
         }

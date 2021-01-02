@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 import lombok.Getter;
+import lombok.var;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.tomlj.Toml;

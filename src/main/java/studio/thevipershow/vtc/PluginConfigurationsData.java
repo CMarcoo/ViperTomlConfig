@@ -1,10 +1,16 @@
 package studio.thevipershow.vtc;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.val;
+import lombok.var;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,33 +26,99 @@ import org.jetbrains.annotations.Nullable;
 public final class PluginConfigurationsData<P extends JavaPlugin> {
 
     private final P javaPlugin;
-    private final Map<ClassHolder<? extends TomlSectionConfiguration<P, ?>>, TomlSectionConfiguration<P, ?>> loadedTomlConfigs = new HashMap<>();
+    @Setter
+    private boolean consoleDebuggingInfo = true;
+    private final Map<ConfigurationData<P>, TomlSectionConfiguration<P, ?>> loadedTomlConfigs = new HashMap<>();
+
+    private TomlSectionConfiguration<P, ?> tryBuild(final Class<?>[] constructorArgs, ConfigurationData<P> configurationData, Object... initargs) {
+        try {
+            Class<? extends TomlSectionConfiguration<P, ?>> tomlConfClass = configurationData.getTomlSectionClass();
+            Constructor<? extends TomlSectionConfiguration<P, ?>> tomlConfConstructor = tomlConfClass.getConstructor(constructorArgs);
+            return tomlConfConstructor.newInstance(initargs);
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            return null;
+        }
+    }
+
+    private static String numberOrderedPrint(LinkedList<String> strings) {
+        val builder = new StringBuilder();
+        strings.iterator().forEachRemaining(str -> builder.append("- ").append(str).append('\n'));
+        return builder.toString();
+    }
 
     /**
      * Load all of the configurations from an enum class
      * that contains all of the available configurations.
      *
-     * @param enumClass  The class for the enum.
-     * @param javaPlugin Your plugin instance.
-     * @param <T>        The type of your plugin.
+     * @param configurationsEnumClass The class for the enum.
+     * @param <T>                     The type of your plugin.
      */
-    public final <T extends Enum<T> & ClassHolder<? extends TomlSectionConfiguration<P, ?>>> void loadAllConfigs(@NotNull Class<? extends T> enumClass, @NotNull P javaPlugin) {
+    public final <T extends Enum<T> & ConfigurationData<P>> void loadAllConfigs(@NotNull Class<? extends T> configurationsEnumClass) {
         var logger = javaPlugin.getLogger();
 
-        for (final T configTypes : enumClass.getEnumConstants()) {
-            var start = System.currentTimeMillis();
-            var configName = configTypes.name();
+        val configEnumConstants = configurationsEnumClass.getEnumConstants();
+        var loadedConfigs = 0;
+        val amountToLoad = configEnumConstants.length;
+        val unloadedConfigNames = new LinkedList<String>();
 
-            logger.info("Loading config " + configName);
+        if (consoleDebuggingInfo) {
+            logger.info(String.format("Starting to load configs for Plugin \"%s\".", javaPlugin.getName()));
+            if (amountToLoad != 0)
+                logger.info(String.format("%d configurations are expected to be loaded.", configEnumConstants.length));
+        }
 
-            try {
-                this.loadedTomlConfigs.put(configTypes, configTypes.getClassData().getConstructor(javaPlugin.getClass()).newInstance(javaPlugin));
-            } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                logger.warning("Could not load config: " + configName);
-                e.printStackTrace();
+        for (final T configType : configEnumConstants) {
+            val start = System.nanoTime();
+            val configName = configType.name();
+            final Class<? extends SectionType> section = configType.getSectionClass();
+
+            if (consoleDebuggingInfo)
+                logger.info("Loading config " + configName);
+
+            val CONSTRUCTOR_ATTEMPTS = new Class<?>[][]{{javaPlugin.getClass()}, {javaPlugin.getClass(), String.class}, {javaPlugin.getClass(), String.class, configType.getSectionClass()}};
+            val INITARGS_ATTEMPTS = new Object[][]{{javaPlugin}, {javaPlugin, configType.getConfigurationName()}, {javaPlugin, configName, section}};
+
+            TomlSectionConfiguration<P, ?> instance = null;
+
+            if (CONSTRUCTOR_ATTEMPTS.length != INITARGS_ATTEMPTS.length)
+                throw new RuntimeException("Constructor and Initargs attempts should have equal size.");
+
+            for (int i = 0; i < CONSTRUCTOR_ATTEMPTS.length; i++)
+                if ((instance = tryBuild(CONSTRUCTOR_ATTEMPTS[i], configType, INITARGS_ATTEMPTS[i])) != null) break;
+
+            if (instance == null) {
+                unloadedConfigNames.offerLast(configType.getConfigurationName());
+            } else {
+                this.loadedTomlConfigs.put(configType, instance);
+                loadedConfigs++;
             }
 
-            logger.info(String.format("Finished loading config in %d milliseconds.", System.currentTimeMillis() - start));
+            if (consoleDebuggingInfo)
+                logger.info(String.format("Finished loading config in %.3f nanoseconds.", (System.nanoTime() - start) / 1E3));
+        }
+
+        if (amountToLoad == 0) return;
+
+        if (amountToLoad != loadedConfigs) {
+            logger.warning(String.format("Plugin only loaded %d configs out of %d!", loadedConfigs, amountToLoad));
+            logger.warning("Configurations that did not load are listed below:");
+            logger.warning(numberOrderedPrint(unloadedConfigNames));
+        } else {
+            logger.info(String.format("All %d configs have been loaded correctly :)", loadedConfigs));
+        }
+    }
+
+    /**
+     * Get all of the currently loaded configs in this plugin configuration data instance,
+     * it exports them (overriding or not) and stores them into data map.
+     *
+     * @param replaceAll Whether if previous config with identical names should be replaced.
+     */
+    public final void exportAndLoadAllLoadedConfigs(boolean replaceAll) {
+        for (final TomlSectionConfiguration<P, ?> configuration : loadedTomlConfigs.values()) {
+            configuration.exportResource(replaceAll);
+            configuration.storeContent();
+            configuration.loadAllValues();
         }
     }
 

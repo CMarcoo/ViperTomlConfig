@@ -6,6 +6,7 @@ import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.var;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,14 +27,14 @@ public final class PluginsConfigurationsManager {
      * This method loads your configurations data using a config list enum.
      *
      * @param yourPlugin  Your plugin instance.
-     * @param configsEnum Your class listing all of the registered configs.
      * @param <P>         Your plugin type.
      * @param <T>         The enum config type.
+     * @return Your plugin data.
      */
-    public final <P extends JavaPlugin, T extends Enum<T> & ConfigurationEntryAndType> void loadPluginData(@NotNull P yourPlugin, @NotNull Class<? extends T> configsEnum) {
+    public final <P extends JavaPlugin, T extends Enum<T> & SectionType> @NotNull PluginConfigurationsData<P> loadPluginData(@NotNull P yourPlugin) {
         var pluginData = new PluginConfigurationsData<P>(Objects.requireNonNull(yourPlugin, "Your plugin instance was null!"));
-        pluginData.loadAllConfigs(configsEnum, yourPlugin);
-        this.pluginConfigDataMap.put(yourPlugin, pluginData);
+        this.pluginConfigDataMap.putIfAbsent(yourPlugin, pluginData);
+        return pluginData;
     }
 
     /**

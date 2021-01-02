@@ -2,6 +2,7 @@ package studio.thevipershow.vtc;
 
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Interface used to implement values loading
@@ -33,5 +34,9 @@ public interface ValuesLoader<T> {
      * @throws IllegalArgumentException If the cast is unsuccessful.
      * @return The value obtained from the config cast to the return type
      */
+    @Nullable
     <S> S getConfigValue(@NotNull T value, @NotNull Class<? extends S> returnClass);
+
+    @Nullable
+    <S> S getConfigValue(@NotNull T value);
 }
