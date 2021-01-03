@@ -31,5 +31,4 @@ public interface Configuration {
      * @return The file reference to the Configuration file.
      */
     @NotNull File getFile();
-
 }

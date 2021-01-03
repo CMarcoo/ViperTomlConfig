@@ -133,7 +133,7 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
      * @return The config if found or null.
      */
     @Nullable
-    public final <T extends TomlSectionConfiguration<P, ?>, S extends Enum<S> & ClassHolder<? extends TomlSectionConfiguration<P, ?>>> T getConfig(@NotNull S sectionEnum) {
+    public final <S extends Enum<S> & ConfigurationData<P>, Q extends Enum<Q> & SectionType, T extends TomlSectionConfiguration<P, Q>> T getConfig(@NotNull S sectionEnum) {
         return (T) this.loadedTomlConfigs.get(sectionEnum);
     }
 }
