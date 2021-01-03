@@ -72,7 +72,7 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
 
         for (final T configType : configEnumConstants) {
             val start = System.nanoTime();
-            val configName = configType.name();
+            val configName = configType.getConfigurationName();
             Class<? extends SectionType> section = configType.getSectionClass();
 
             if (consoleDebuggingInfo) {
@@ -110,7 +110,7 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
      * @param replaceAll Whether if previous config with identical names should be replaced.
      */
     public final void exportAndLoadAllLoadedConfigs(boolean replaceAll) {
-        for (final TomlSectionConfiguration<P, ?> configuration : loadedTomlConfigs.values()) {
+        for (TomlSectionConfiguration<P, ?> configuration : loadedTomlConfigs.values()) {
             configuration.exportResource(replaceAll);
             configuration.storeContent();
             configuration.loadAllValues();
