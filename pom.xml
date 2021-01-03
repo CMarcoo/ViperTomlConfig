@@ -28,8 +28,8 @@
             <name>TheViperShow</name>
             <email>thevipershowita@gmail.com</email>
             <id>001</id>
-            <organization>${organization.name}</organization>
-            <organizationUrl>${organization.url}</organizationUrl>
+            <organization>${project.organization.name}</organization>
+            <organizationUrl>${project.organization.url}</organizationUrl>
             <timezone>${user.timezone}</timezone>
             <roles>
                 <role>Lead Developer</role>
@@ -96,6 +96,26 @@
                                     <shadedPattern>studio.thevipershow.libs.tomlj</shadedPattern>
                                 </relocation>
                             </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>org.antlr:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.MF</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.tomlj:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.MF</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.google.code.findbugs:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.MF</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>
