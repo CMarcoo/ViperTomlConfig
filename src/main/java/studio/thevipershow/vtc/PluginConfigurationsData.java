@@ -36,13 +36,14 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
             Constructor<? extends TomlSectionConfiguration<P, ?>> tomlConfConstructor = tomlConfClass.getConstructor(constructorArgs);
             return tomlConfConstructor.newInstance(initargs);
         } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            e.printStackTrace();
             return null;
         }
     }
 
     private static String numberOrderedPrint(LinkedList<String> strings) {
         val builder = new StringBuilder();
-        strings.iterator().forEachRemaining(str -> builder.append("- ").append(str).append('\n'));
+        strings.iterator().forEachRemaining(str -> builder.append("\n- ").append(str));
         return builder.toString();
     }
 
@@ -63,8 +64,9 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
 
         if (consoleDebuggingInfo) {
             logger.info(String.format("Starting to load configs for Plugin \"%s\".", javaPlugin.getName()));
-            if (amountToLoad != 0)
+            if (amountToLoad != 0) {
                 logger.info(String.format("%d configurations are expected to be loaded.", configEnumConstants.length));
+            }
         }
 
         for (final T configType : configEnumConstants) {
@@ -72,19 +74,25 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
             val configName = configType.name();
             final Class<? extends SectionType> section = configType.getSectionClass();
 
-            if (consoleDebuggingInfo)
+            if (consoleDebuggingInfo) {
                 logger.info("Loading config " + configName);
+            }
 
             val CONSTRUCTOR_ATTEMPTS = new Class<?>[][]{{javaPlugin.getClass()}, {javaPlugin.getClass(), String.class}, {javaPlugin.getClass(), String.class, configType.getSectionClass()}};
             val INITARGS_ATTEMPTS = new Object[][]{{javaPlugin}, {javaPlugin, configType.getConfigurationName()}, {javaPlugin, configName, section}};
 
             TomlSectionConfiguration<P, ?> instance = null;
 
-            if (CONSTRUCTOR_ATTEMPTS.length != INITARGS_ATTEMPTS.length)
+            if (CONSTRUCTOR_ATTEMPTS.length != INITARGS_ATTEMPTS.length) {
                 throw new RuntimeException("Constructor and Initargs attempts should have equal size.");
+            }
 
-            for (int i = 0; i < CONSTRUCTOR_ATTEMPTS.length; i++)
-                if ((instance = tryBuild(CONSTRUCTOR_ATTEMPTS[i], configType, INITARGS_ATTEMPTS[i])) != null) break;
+            for (int uwu = 0; uwu < 3; uwu++) {
+                if (instance != null) {
+                    break;
+                }
+                instance = tryBuild(CONSTRUCTOR_ATTEMPTS[uwu], configType, INITARGS_ATTEMPTS[uwu]);
+            }
 
             if (instance == null) {
                 unloadedConfigNames.offerLast(configType.getConfigurationName());
@@ -94,10 +102,10 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
             }
 
             if (consoleDebuggingInfo)
-                logger.info(String.format("Finished loading config in %.3f nanoseconds.", (System.nanoTime() - start) / 1E3));
+                logger.info(String.format("Finished loading config in %.3f milliseconds.", Math.ceil((System.nanoTime() - start) / 1E6)));
         }
 
-        if (amountToLoad == 0) return;
+        if (amountToLoad == 0 || !consoleDebuggingInfo) return;
 
         if (amountToLoad != loadedConfigs) {
             logger.warning(String.format("Plugin only loaded %d configs out of %d!", loadedConfigs, amountToLoad));
