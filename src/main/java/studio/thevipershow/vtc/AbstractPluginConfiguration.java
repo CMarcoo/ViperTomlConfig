@@ -44,7 +44,9 @@ public abstract class AbstractPluginConfiguration<T extends JavaPlugin> implemen
      */
     @Override
     public void exportResource(boolean replace) {
-        this.javaPlugin.saveResource(this.configurationFilename, replace);
+        if (!configurationFile.exists()) {
+            this.javaPlugin.saveResource(this.configurationFilename, replace);
+        }
     }
 
     /**
