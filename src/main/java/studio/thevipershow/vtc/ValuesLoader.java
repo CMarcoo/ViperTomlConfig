@@ -38,5 +38,5 @@ public interface ValuesLoader<T> {
     <S> S getConfigValue(@NotNull T value, @NotNull Class<? extends S> returnClass);
 
     @Nullable
-    <S> S getConfigValue(@NotNull T value);
+    <S> S getConfigValue(@NotNull Class<S> type, @NotNull T value);
 }

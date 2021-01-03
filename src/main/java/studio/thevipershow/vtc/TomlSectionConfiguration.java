@@ -10,14 +10,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * This is an implementation of AbstractTomlConfiguration that allows you to read, store, and modify parsed values.
+ * This is an implementation of TomlConfiguration that allows you to read, store, and modify parsed values.
  * It uses a enum dependency approach so you can simply write the nodes in an enum with their type, and you will
  * be able to automatically load them.
  *
  * @param <T> Your plugin type.
  * @param <S> The enum type with all of your config sections.
  */
-public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends Enum<S> & SectionType> extends AbstractTomlConfiguration<T> implements ValuesLoader<S> {
+public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends Enum<S> & SectionType> extends TomlConfiguration<T> implements ValuesLoader<S> {
 
     protected final Class<S> enumTypeClass;
     protected final EnumSet<S> enumClassValues;
@@ -31,7 +31,7 @@ public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends E
      * @param configurationFilename The name of the configuration, including extension.
      * @param enumTypeClass         The class of the Enum containing all of the sections for this config.
      */
-    public TomlSectionConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename, @NotNull Class<S> enumTypeClass) {
+    protected TomlSectionConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename, @NotNull Class<S> enumTypeClass) {
         super(javaPlugin, configurationFilename);
         this.enumTypeClass = Objects.requireNonNull(enumTypeClass, "Provided an invalid section enum class for this config.");
         this.enumClassValues = EnumSet.allOf(enumTypeClass);
@@ -53,14 +53,11 @@ public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends E
      *
      * @param s The value to load.
      */
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void loadValue(@NotNull S s) {
         var stringData = s.getStringData();
         var read = Objects.requireNonNull(tomlParseResult.get(stringData), String.format("Reading field %s from config %s returned null.", stringData, super.configurationFilename));
-        if (read != null) {
-            this.configurationValues.put(s, read);
-        }
+        this.configurationValues.put(s, read);
     }
 
     /**
@@ -79,7 +76,7 @@ public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends E
         if (configurationValues.containsKey(value)) {
             var obtained = configurationValues.get(value);
             if (returnClass.isAssignableFrom(obtained.getClass()))
-                return Objects.requireNonNull((Q) obtained);
+                return Objects.requireNonNull(returnClass.cast(obtained));
             else
                 throw new IllegalArgumentException(String.format("The return type for %s inside config %s was %s but it has been tried to be cast to %s.",
                         value.getStringData(), getClass().getSimpleName(), obtained.getClass().getSimpleName(), returnClass.getSimpleName()));
@@ -98,10 +95,10 @@ public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends E
      */
     @Override
     @Nullable
-    public <Q> Q getConfigValue(@NotNull S value) {
+    public <Q> Q getConfigValue(@NotNull Class<Q> type, @NotNull S value) {
         if (configurationValues.containsKey(value)) {
             var obtained = configurationValues.get(value);
-            return Objects.requireNonNull((Q) obtained);
+            return Objects.requireNonNull(type.cast(obtained));
         } else {
             return null;
         }

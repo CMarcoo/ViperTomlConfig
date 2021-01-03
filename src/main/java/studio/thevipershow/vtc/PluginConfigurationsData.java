@@ -1,11 +1,5 @@
 package studio.thevipershow.vtc;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -14,6 +8,12 @@ import lombok.var;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Your plugin configurations data.
@@ -133,7 +133,7 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
      * @return The config if found or null.
      */
     @Nullable
-    public final <S extends Enum<S> & ConfigurationData<P>, Q extends Enum<Q> & SectionType, T extends TomlSectionConfiguration<P, Q>> T getConfig(@NotNull S sectionEnum) {
-        return (T) this.loadedTomlConfigs.get(sectionEnum);
+    public final <S extends Enum<S> & ConfigurationData<P>, Q extends Enum<Q> & SectionType, T extends TomlSectionConfiguration<P, Q>> T getConfig(Class<T> configType, @NotNull S sectionEnum) {
+        return configType.cast(this.loadedTomlConfigs.get(sectionEnum));
     }
 }

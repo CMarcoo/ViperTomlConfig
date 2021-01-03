@@ -16,7 +16,7 @@ public final class PluginsConfigurationsManager {
 
     private static final PluginsConfigurationsManager instance = new PluginsConfigurationsManager();
 
-    synchronized public static PluginsConfigurationsManager getInstance() {
+    public static synchronized PluginsConfigurationsManager getInstance() {
         return instance;
     }
 
@@ -45,9 +45,9 @@ public final class PluginsConfigurationsManager {
      * @return Your data if loaded, null otherwise.
      */
     @Nullable
-    public final <P extends JavaPlugin> PluginConfigurationsData<P> getPluginData(@NotNull P yourPlugin) {
+    public final <P extends JavaPlugin> PluginConfigurationsData<P> getPluginData(@NotNull Class<PluginConfigurationsData<P>> type, @NotNull P yourPlugin) {
         if (this.pluginConfigDataMap.containsKey(Objects.requireNonNull(yourPlugin, "Your plugin instance was null!")))
-            return (PluginConfigurationsData<P>) this.pluginConfigDataMap.get(yourPlugin);
+            return type.cast(this.pluginConfigDataMap.get(yourPlugin));
         else
             return null;
     }

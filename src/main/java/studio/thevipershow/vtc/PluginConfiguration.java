@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @param <T> Your plugin type.
  */
-public abstract class AbstractPluginConfiguration<T extends JavaPlugin> implements Configuration {
+public abstract class PluginConfiguration<T extends JavaPlugin> implements Configuration {
 
     @Getter
     protected final T javaPlugin;
@@ -28,7 +28,7 @@ public abstract class AbstractPluginConfiguration<T extends JavaPlugin> implemen
      * @param javaPlugin            Your plugin instance.
      * @param configurationFilename The name of the configuration, including extension.
      */
-    public AbstractPluginConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename) {
+    protected PluginConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename) {
         this.javaPlugin = Objects.requireNonNull(javaPlugin, "You have provided a null plugin instance!");
         this.configurationFilename = Objects.requireNonNull(configurationFilename, "You have provided a null configuration filename!");
         this.configurationFile = new File(javaPlugin.getDataFolder(), configurationFilename);

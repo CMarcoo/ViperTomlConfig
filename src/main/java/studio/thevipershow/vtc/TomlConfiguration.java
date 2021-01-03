@@ -12,14 +12,14 @@ import org.tomlj.Toml;
 import org.tomlj.TomlParseResult;
 
 /**
- * This class is an implementation of AbstractPluginConfiguration and ConfigurationContent.
+ * This class is an implementation of PluginConfiguration and ConfigurationContent.
  * Its purpose is to provide a good feature set for your TOML configurations, providing:
  * - file checking {@link #checkFileStatus(File)}
  * - parsing {@link #storeContent()}
  *
  * @param <T> Your plugin type.
  */
-public abstract class AbstractTomlConfiguration<T extends JavaPlugin> extends AbstractPluginConfiguration<T> implements ConfigurationContent {
+public abstract class TomlConfiguration<T extends JavaPlugin> extends PluginConfiguration<T> implements ConfigurationContent {
 
     @Getter
     protected TomlParseResult tomlParseResult;
@@ -42,7 +42,7 @@ public abstract class AbstractTomlConfiguration<T extends JavaPlugin> extends Ab
      * @param javaPlugin            Your plugin instance.
      * @param configurationFilename The name of the configuration, including extension.
      */
-    public AbstractTomlConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename) {
+    protected TomlConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename) {
         super(javaPlugin, configurationFilename);
     }
 
