@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -33,10 +34,17 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
     private TomlSectionConfiguration<P, ?> tryBuild(final Class<?>[] constructorArgs, ConfigurationData<P> configurationData, Object... initargs) {
         try {
             Class<? extends TomlSectionConfiguration<P, ?>> tomlConfClass = configurationData.getTomlSectionClass();
-            Constructor<? extends TomlSectionConfiguration<P, ?>> tomlConfConstructor = tomlConfClass.getConstructor(constructorArgs);
-            return tomlConfConstructor.newInstance(initargs);
+            Constructor<?>[] tomlConfConstructor = tomlConfClass.getConstructors();
+            for (Constructor<?> constructor : tomlConfConstructor) {
+                StringBuilder builder = new StringBuilder();
+                for (Class<?> parameterType : constructor.getParameterTypes()) {
+                    builder.append(parameterType.getSimpleName()).append(", ");
+                }
+                javaPlugin.getLogger().info(builder.toString());
+            }
+            return Objects.requireNonNull(tomlConfClass.getDeclaredConstructor(constructorArgs)).newInstance(initargs);
         } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             return null;
         }
     }
