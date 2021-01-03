@@ -5,7 +5,7 @@
 
     <groupId>studio.thevipershow</groupId>
     <artifactId>ViperTomlConfig</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>0.1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>ViperTomlConfig</name>
@@ -81,23 +81,6 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <configuration>
-                            <relocations>
-                                <relocation>
-                                    <pattern>javax.annotation</pattern>
-                                    <shadedPattern>studio.thevipershow.libs.javax</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.antlr.v4.runtime</pattern>
-                                    <shadedPattern>studio.thevipershow.libs.antlr</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.tomlj</pattern>
-                                    <shadedPattern>studio.thevipershow.libs.tomlj</shadedPattern>
-                                </relocation>
-                            </relocations>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
