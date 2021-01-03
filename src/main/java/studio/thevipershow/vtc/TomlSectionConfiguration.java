@@ -1,8 +1,14 @@
 package studio.thevipershow.vtc;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import lombok.Getter;
 import lombok.var;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,12 +23,12 @@ import org.jetbrains.annotations.Nullable;
  * @param <T> Your plugin type.
  * @param <S> The enum type with all of your config sections.
  */
+@Getter
 public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends Enum<S> & SectionType> extends AbstractTomlConfiguration<T> implements ValuesLoader<S> {
 
-    protected final Class<S> enumTypeClass;
-    protected final EnumSet<S> enumClassValues;
-    @Getter
-    private final EnumMap<S, Object> configurationValues;
+    private final Map<S, Object> configurationValues;
+    protected final Class<? extends S> enumTypeClass;
+    protected final Set<S> enumClassValues;
 
     /**
      * Constructor for abstract class:
@@ -31,11 +37,12 @@ public abstract class TomlSectionConfiguration<T extends JavaPlugin, S extends E
      * @param configurationFilename The name of the configuration, including extension.
      * @param enumTypeClass         The class of the Enum containing all of the sections for this config.
      */
-    public TomlSectionConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename, @NotNull Class<S> enumTypeClass) {
+    public TomlSectionConfiguration(@NotNull T javaPlugin, @NotNull String configurationFilename, @NotNull Class<? extends S> enumTypeClass) {
         super(javaPlugin, configurationFilename);
         this.enumTypeClass = Objects.requireNonNull(enumTypeClass, "Provided an invalid section enum class for this config.");
-        this.enumClassValues = EnumSet.allOf(enumTypeClass);
-        this.configurationValues = new EnumMap<>(enumTypeClass);
+        this.enumClassValues = new HashSet<>();
+        enumClassValues.addAll(ImmutableSet.copyOf(enumTypeClass.getEnumConstants()));
+        this.configurationValues = new HashMap<>();
     }
 
     /**

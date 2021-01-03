@@ -72,7 +72,7 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
         for (final T configType : configEnumConstants) {
             val start = System.nanoTime();
             val configName = configType.name();
-            final Class<? extends SectionType> section = configType.getSectionClass();
+            Class<? extends SectionType> section = configType.getSectionClass();
 
             if (consoleDebuggingInfo) {
                 logger.info("Loading config " + configName);
