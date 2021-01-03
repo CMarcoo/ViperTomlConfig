@@ -2,11 +2,9 @@ package studio.thevipershow.vtc;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Objects;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -31,20 +29,15 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
     private boolean consoleDebuggingInfo = true;
     private final Map<ConfigurationData<P>, TomlSectionConfiguration<P, ?>> loadedTomlConfigs = new HashMap<>();
 
-    private TomlSectionConfiguration<P, ?> tryBuild(final Class<?>[] constructorArgs, ConfigurationData<P> configurationData, Object... initargs) {
+    private TomlSectionConfiguration<P, ?> tryBuild(Class<? extends TomlSectionConfiguration<P, ?>> tomlConfigClass,
+                                                    P javaPlugin,
+                                                    String filename,
+                                                    Class<? extends SectionType> sectionClass) {
         try {
-            Class<? extends TomlSectionConfiguration<P, ?>> tomlConfClass = configurationData.getTomlSectionClass();
-            Constructor<?>[] tomlConfConstructor = tomlConfClass.getConstructors();
-            for (Constructor<?> constructor : tomlConfConstructor) {
-                StringBuilder builder = new StringBuilder();
-                for (Class<?> parameterType : constructor.getParameterTypes()) {
-                    builder.append(parameterType.getSimpleName()).append(", ");
-                }
-                javaPlugin.getLogger().info(builder.toString());
-            }
-            return Objects.requireNonNull(tomlConfClass.getDeclaredConstructor(constructorArgs)).newInstance(initargs);
+            Constructor<? extends TomlSectionConfiguration<P, ?>> tomlConfigConstructor = tomlConfigClass.getDeclaredConstructor(javaPlugin.getClass(), filename.getClass(), sectionClass);
+            return tomlConfigConstructor.newInstance(javaPlugin, filename, sectionClass);
         } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            // e.printStackTrace();
+            e.printStackTrace();
             return null;
         }
     }
@@ -86,21 +79,7 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
                 logger.info("Loading config " + configName);
             }
 
-            val CONSTRUCTOR_ATTEMPTS = new Class<?>[][]{{javaPlugin.getClass()}, {javaPlugin.getClass(), String.class}, {javaPlugin.getClass(), String.class, configType.getSectionClass()}};
-            val INITARGS_ATTEMPTS = new Object[][]{{javaPlugin}, {javaPlugin, configType.getConfigurationName()}, {javaPlugin, configName, section}};
-
-            TomlSectionConfiguration<P, ?> instance = null;
-
-            if (CONSTRUCTOR_ATTEMPTS.length != INITARGS_ATTEMPTS.length) {
-                throw new RuntimeException("Constructor and Initargs attempts should have equal size.");
-            }
-
-            for (int uwu = 0; uwu < 3; uwu++) {
-                if (instance != null) {
-                    break;
-                }
-                instance = tryBuild(CONSTRUCTOR_ATTEMPTS[uwu], configType, INITARGS_ATTEMPTS[uwu]);
-            }
+            TomlSectionConfiguration<P, ?> instance = tryBuild(configType.getTomlSectionClass(), javaPlugin, configName, section);
 
             if (instance == null) {
                 unloadedConfigNames.offerLast(configType.getConfigurationName());
