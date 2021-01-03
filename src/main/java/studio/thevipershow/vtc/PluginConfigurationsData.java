@@ -34,7 +34,7 @@ public final class PluginConfigurationsData<P extends JavaPlugin> {
                                                     String filename,
                                                     Class<? extends SectionType> sectionClass) {
         try {
-            Constructor<? extends TomlSectionConfiguration<P, ?>> tomlConfigConstructor = tomlConfigClass.getDeclaredConstructor(javaPlugin.getClass(), filename.getClass(), sectionClass);
+            Constructor<? extends TomlSectionConfiguration<P, ?>> tomlConfigConstructor = tomlConfigClass.getDeclaredConstructor(javaPlugin.getClass(), filename.getClass(), Class.class);
             return tomlConfigConstructor.newInstance(javaPlugin, filename, sectionClass);
         } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
             e.printStackTrace();
